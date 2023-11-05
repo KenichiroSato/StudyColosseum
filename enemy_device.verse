@@ -20,6 +20,9 @@ enemy_device := class(creative_device):
     var InitialRotation<private>: rotation = rotation{}
     var CurrentAgent<private>: ?agent = false
 
+    MaxX :float = 3580.0
+    MaxY :float = 5100.0
+
     # Runs when the device is started in a running game
     OnBegin<override>()<suspends>:void=
         set InitialPosition = Enemy.GetTransform().Translation
@@ -69,7 +72,18 @@ enemy_device := class(creative_device):
             PropLocation := Enemy.GetTransform().Translation
             Xdiff := PlayerLocation.X - PropLocation.X
             Ydiff := PlayerLocation.Y - PropLocation.Y
-            NewLocation := vector3{X := PropLocation.X + 1.5*Xdiff, Y :=  PropLocation.Y + 1.5*Ydiff, Z := PropLocation.Z}
+            var NewX :float = PropLocation.X + 1.5*Xdiff
+            var NewY :float = PropLocation.Y + 1.5*Ydiff
+            if (NewX < 0.0):
+                set NewX = 0.0
+            if (NewX > MaxX):
+                set NewX = MaxX
+            if (NewY < 0.0):
+                set NewY = 0.0
+            if (NewY > MaxY):
+                set NewY = MaxY
+            Print("NewX={NewX}, NewY={NewY}")
+            NewLocation := vector3{X := NewX, Y := NewY, Z := PropLocation.Z}
             Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 2.0)
 
     FollowPlayer(Agent : agent)<suspends>:void=
