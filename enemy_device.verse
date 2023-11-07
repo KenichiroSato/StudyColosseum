@@ -49,6 +49,7 @@ enemy_device := class(creative_device):
         spawn{Enemy.MoveTo(InitialPosition, InitialRotation, 1.0 )}
 
     Start(Agent: agent)<suspends>:void =
+        Sleep(3.0) #プレーヤースポーン直後は無敵期間があるようなのでwait
         loop:
             race:
                 FollowPlayer(Agent)
