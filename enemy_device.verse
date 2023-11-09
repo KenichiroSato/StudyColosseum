@@ -20,6 +20,8 @@ enemy_device := class(creative_device):
     var InitialRotation<private>: rotation = rotation{}
     var CurrentAgent<private>: ?agent = false
 
+    HealthBar : health_bar = health_bar{}
+
     MaxX :float = 3580.0
     MaxY :float = 5100.0
 
@@ -30,6 +32,13 @@ enemy_device := class(creative_device):
         PlayerSpawner.SpawnedEvent.Subscribe(OnPlayerSpawned)
         EnemyZone.AgentEntersEvent.Subscribe(OnPlayerCaptured)
         Button1.InteractedWithEvent.Subscribe(OnButton)
+        InitHealthBar()
+
+    InitHealthBar<private>():void =
+        AllPlayers := GetPlayspace().GetPlayers()
+        if (Player := AllPlayers[0]):
+            HealthBar.Init("Aknar The Terrible", 1000.0)
+            HealthBar.ShowUIForPlayer(Player)
 
     OnPlayerSpawned(Agent: agent):void=
         spawn{Start(Agent)}
@@ -47,6 +56,9 @@ enemy_device := class(creative_device):
 
     BackToInitialPosition():void =
         spawn{Enemy.MoveTo(InitialPosition, InitialRotation, 1.0 )}
+
+    OnAttacked(): void =
+        HealthBar.TakeDamage(100.0)
 
     Start(Agent: agent)<suspends>:void =
         Sleep(3.0) #プレーヤースポーン直後は無敵期間があるようなのでwait
