@@ -21,10 +21,11 @@ health_bar := class(creative_device):
     
     BossBarColorBase<private> : color_block = color_block{
         DefaultColor := MakeColorFromHex("000000")
-        DefaultDesiredSize := vector2{X:= 1200.0, Y := 40.0}} 
+        DefaultDesiredSize := vector2{X:= 1000.0, Y := 40.0}} 
 
     var BossBarColorTop<private> : color_block = color_block{}  
     var Overlay<private> : overlay = overlay{}
+    var Canvas<private> : canvas = canvas{}
         
     HPBarTitleTextBlock<private> : text_block = text_block{DefaultTextColor := MakeColorFromHex("FFFFFF")}
 
@@ -35,6 +36,9 @@ health_bar := class(creative_device):
         set iTotalHP = BossTotalHP
         set iCurrentHP = BossTotalHP
         HPBarTitleTextBlock.SetText(HPTitleText("{iBossName}: {iCurrentHP}/{iTotalHP}"))
+
+    GetCurrentHp(): float =
+        return iCurrentHP
 
     TakeDamage(DamageAmount : float):void=
         set iCurrentHP -= DamageAmount
@@ -60,6 +64,10 @@ health_bar := class(creative_device):
         block:
 
     MyButton : button_device = button_device{}
+
+    RemoveHealthBar(Player : player):void =
+        if (PlayerUI := GetPlayerUI[Player]):
+            PlayerUI.RemoveWidget(Canvas)
 
     UpdateHealthBar(NewWidth : float):void=
         Overlay.RemoveWidget(HPBarTitleTextBlock)
@@ -88,7 +96,7 @@ health_bar := class(creative_device):
                 overlay_slot:
                     Widget := BossBarColorBase
                 overlay_slot:
-                    Widget := CreateTopHealthBar(1200.0)
+                    Widget := CreateTopHealthBar(1000.0)
                 overlay_slot:
                     Widget := HPBarTitleTextBlock
         set Overlay = TheOverlay
@@ -98,7 +106,7 @@ health_bar := class(creative_device):
         TheCanvas : canvas = canvas:
             Slots := array:
                 canvas_slot:
-                    Anchors := anchors{Minimum := vector2{X := 0.5, Y := 0.9}, Maximum := vector2{X := 0.5, Y := 0.9}}
+                    Anchors := anchors{Minimum := vector2{X := 0.5, Y := 0.2}, Maximum := vector2{X := 0.5, Y := 0.2}}
                     Offsets := margin{Top := 0.0, Left := 0.0, Right := 0.0, Bottom := 100.0}
                     Alignment := vector2{X := 0.5, Y := 1.0}
                     Widget := stack_box:
@@ -106,6 +114,6 @@ health_bar := class(creative_device):
                         Slots := array:
                             stack_box_slot:
                                 Widget := CreateOverlay()
-                            
+        set Canvas = TheCanvas
                                                                 
         return TheCanvas        

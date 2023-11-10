@@ -27,12 +27,12 @@ enemy_device := class(creative_device):
 
     # Runs when the device is started in a running game
     OnBegin<override>()<suspends>:void=
-        set InitialPosition = Enemy.GetTransform().Translation
-        set InitialRotation = Enemy.GetTransform().Rotation
         PlayerSpawner.SpawnedEvent.Subscribe(OnPlayerSpawned)
         EnemyZone.AgentEntersEvent.Subscribe(OnPlayerCaptured)
         Button1.InteractedWithEvent.Subscribe(OnButton)
         InitHealthBar()
+        Emerge()
+
 
     InitHealthBar<private>():void =
         AllPlayers := GetPlayspace().GetPlayers()
@@ -44,6 +44,8 @@ enemy_device := class(creative_device):
         spawn{Start(Agent)}
     
     OnButton(Agent: agent):void = 
+        InitHealthBar()
+        spawn{Emerge()}
         spawn{Start(Agent)}
 
     OnPlayerCaptured(Agent : agent) :void =
@@ -58,25 +60,48 @@ enemy_device := class(creative_device):
         spawn{Enemy.MoveTo(InitialPosition, InitialRotation, 1.0 )}
 
     OnAttacked(): void =
-        HealthBar.TakeDamage(100.0)
+        HealthBar.TakeDamage(250.0)
+        CurrentHp := HealthBar.GetCurrentHp()
+        if (CurrentHp = 0.0):
+            set CurrentAgent = false
+            spawn{BackToGround()}
+            AllPlayers := GetPlayspace().GetPlayers()
+            if (Player := AllPlayers[0]):
+                HealthBar.RemoveHealthBar(Player)
 
     Start(Agent: agent)<suspends>:void =
         Sleep(3.0) #プレーヤースポーン直後は無敵期間があるようなのでwait
+        set CurrentAgent = option{Agent}
         loop:
             race:
-                FollowPlayer(Agent)
+                RotateTowardPlayer(Agent)
                 Wait()
-            Attack(Agent)
-            Sleep(1.0)
             if (CurrentAgent = false):
-                Print("Break loop")
+                Print("Break loop1") #Wait中に倒した時のため必要
                 break
+            Attack(Agent)
+            if (CurrentAgent = false):
+                Print("Break loop2") #Attack中に倒した時のため必要
+                break
+            Sleep(1.0)
 
     Wait()<suspends>:void =
         WaitTime := GetRandomFloat(0.0, 10.0)
         Print("Wait for {WaitTime} seconds")
         Sleep(WaitTime)
 
+    Emerge<private>()<suspends>:void =
+        PropLocation := Enemy.GetTransform().Translation
+        NewLocation := vector3{X := PropLocation.X, Y := PropLocation.Y, Z := PropLocation.Z + 300.0}
+        Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 1.5)
+        set InitialPosition = Enemy.GetTransform().Translation
+        set InitialRotation = Enemy.GetTransform().Rotation
+
+    BackToGround<private>()<suspends>:void =
+        Print("BackToGround")
+        PropLocation := Enemy.GetTransform().Translation
+        NewLocation := vector3{X := PropLocation.X, Y := PropLocation.Y, Z := PropLocation.Z - 300.0}
+        Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 3.0)
 
     Attack(Agent: agent)<suspends>:void =
         Print("Attack")
@@ -99,10 +124,8 @@ enemy_device := class(creative_device):
             NewLocation := vector3{X := NewX, Y := NewY, Z := PropLocation.Z}
             Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 2.0)
 
-    FollowPlayer(Agent : agent)<suspends>:void=
-        Print("FollowPlayer")
-        set CurrentAgent = option{Agent}
-        var MoveSpeed :float = 0.1
+    RotateTowardPlayer(Agent : agent)<suspends>:void=
+        Print("RotateTowardPlayer")
         loop:
             if (CurrentAgent = false):
                 break
@@ -114,9 +137,5 @@ enemy_device := class(creative_device):
                     Pitch := 0.0 #RadiansToDegrees(ArcTan(LookDirection.Z, Sqrt((LookDirection.X * LookDirection.X) + (LookDirection.Y * LookDirection.Y))))
                     Roll := 0.0
                     NewRotation := MakeRotationFromYawPitchRollDegrees(Yaw, Pitch, Roll)
-                    # Movement
-                    LerpLocation := Lerp(PropLocation, PlayerLocation, MoveSpeed)
-                    FinalLocation := vector3{X := LerpLocation.X, Y := LerpLocation.Y, Z := LerpLocation.Z}
                     Enemy.MoveTo(PropLocation, NewRotation, 0.5)
-                    set MoveSpeed += 0.2
             Sleep(0.0)
