@@ -15,6 +15,7 @@ enemy_device := class(creative_device):
     @editable var EnemyZone : mutator_zone_device = mutator_zone_device{}
     @editable Button1 :button_device = button_device{}
     @editable PlayerSpawner: player_spawner_device = player_spawner_device{}
+    @editable HealthBarColor: string = "ffffff"
 
     var InitialPosition<private>: vector3 = vector3{X:=0.0, Y:= 0.0, Z:=0.0}
     var InitialRotation<private>: rotation = rotation{}

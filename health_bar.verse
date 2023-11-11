@@ -18,6 +18,7 @@ health_bar := class(creative_device):
     var iTotalHP<private> : float = 1000.0
     var iCurrentHP<private> : float = 1000.0
     var iBossName<private> : string = "Bulgna The Ugly"
+    var BarColorHex<private> : string = "FFFFFF"
     
     BossBarColorBase<private> : color_block = color_block{
         DefaultColor := MakeColorFromHex("000000")
@@ -31,10 +32,11 @@ health_bar := class(creative_device):
 
     HPTitleText<private><localizes>(HPText : string) : message = "{HPText}"
 
-    Init(BossName : string, BossTotalHP: float):void=
+    Init(BossName : string, BossTotalHP: float, ColorHex: string):void=
         set iBossName = BossName
         set iTotalHP = BossTotalHP
         set iCurrentHP = BossTotalHP
+        set BarColorHex = ColorHex
         HPBarTitleTextBlock.SetText(HPTitleText("{iBossName}: {iCurrentHP}/{iTotalHP}"))
 
     GetCurrentHp(): float =
@@ -84,7 +86,7 @@ health_bar := class(creative_device):
 
     CreateTopHealthBar<private>(Width: float):color_block=
         ColorBlock := color_block{
-            DefaultColor := MakeColorFromHex("ff2a00")
+            DefaultColor := MakeColorFromHex(BarColorHex)
             DefaultDesiredSize := vector2{X:= Width, Y := 40.0}} 
         
         set BossBarColorTop = ColorBlock
