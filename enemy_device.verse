@@ -20,33 +20,20 @@ enemy_device := class(creative_device):
     var InitialRotation<private>: rotation = rotation{}
     var CurrentAgent<private>: ?agent = false
 
-    HealthBar : health_bar = health_bar{}
-
     MaxX :float = 3580.0
     MaxY :float = 5100.0
 
     # Runs when the device is started in a running game
     OnBegin<override>()<suspends>:void=
-        PlayerSpawner.SpawnedEvent.Subscribe(OnPlayerSpawned)
-        EnemyZone.AgentEntersEvent.Subscribe(OnPlayerCaptured)
         Button1.InteractedWithEvent.Subscribe(OnButton)
-        InitHealthBar()
-        Emerge()
-
-
-    InitHealthBar<private>():void =
-        AllPlayers := GetPlayspace().GetPlayers()
-        if (Player := AllPlayers[0]):
-            HealthBar.Init("Aknar The Terrible", 1000.0)
-            HealthBar.ShowUIForPlayer(Player)
 
     OnPlayerSpawned(Agent: agent):void=
-        spawn{Start(Agent)}
+        Print("OnPlayerSpawned")
+        spawn{StartChasing(Agent)}
     
     OnButton(Agent: agent):void = 
-        InitHealthBar()
         spawn{Emerge()}
-        spawn{Start(Agent)}
+        spawn{StartChasing(Agent)}
 
     OnPlayerCaptured(Agent : agent) :void =
         if (FortniteCharacter : fort_character = Agent.GetFortCharacter[]):
@@ -59,17 +46,8 @@ enemy_device := class(creative_device):
     BackToInitialPosition():void =
         spawn{Enemy.MoveTo(InitialPosition, InitialRotation, 1.0 )}
 
-    OnAttacked(): void =
-        HealthBar.TakeDamage(250.0)
-        CurrentHp := HealthBar.GetCurrentHp()
-        if (CurrentHp = 0.0):
-            set CurrentAgent = false
-            spawn{BackToGround()}
-            AllPlayers := GetPlayspace().GetPlayers()
-            if (Player := AllPlayers[0]):
-                HealthBar.RemoveHealthBar(Player)
-
-    Start(Agent: agent)<suspends>:void =
+    StartChasing(Agent: agent)<suspends>:void =
+        Print("StartChasing")
         Sleep(3.0) #プレーヤースポーン直後は無敵期間があるようなのでwait
         set CurrentAgent = option{Agent}
         loop:
@@ -87,24 +65,27 @@ enemy_device := class(creative_device):
 
     Wait()<suspends>:void =
         WaitTime := GetRandomFloat(0.0, 10.0)
-        Print("Wait for {WaitTime} seconds")
+        #Print("Wait for {WaitTime} seconds")
         Sleep(WaitTime)
 
-    Emerge<private>()<suspends>:void =
+    Emerge()<suspends>:void =
+        PlayerSpawner.SpawnedEvent.Subscribe(OnPlayerSpawned)
+        EnemyZone.AgentEntersEvent.Subscribe(OnPlayerCaptured)
         PropLocation := Enemy.GetTransform().Translation
         NewLocation := vector3{X := PropLocation.X, Y := PropLocation.Y, Z := PropLocation.Z + 300.0}
         Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 1.5)
         set InitialPosition = Enemy.GetTransform().Translation
         set InitialRotation = Enemy.GetTransform().Rotation
 
-    BackToGround<private>()<suspends>:void =
+    BackToGround()<suspends>:void =
         Print("BackToGround")
+        set CurrentAgent = false
         PropLocation := Enemy.GetTransform().Translation
         NewLocation := vector3{X := PropLocation.X, Y := PropLocation.Y, Z := PropLocation.Z - 300.0}
         Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 3.0)
 
     Attack(Agent: agent)<suspends>:void =
-        Print("Attack")
+        #Print("Attack")
         if (PlayerCharacter := Agent.GetFortCharacter[]):
             PlayerLocation := PlayerCharacter.GetTransform().Translation
             PropLocation := Enemy.GetTransform().Translation
@@ -120,12 +101,11 @@ enemy_device := class(creative_device):
                 set NewY = 0.0
             if (NewY > MaxY):
                 set NewY = MaxY
-            Print("NewX={NewX}, NewY={NewY}")
             NewLocation := vector3{X := NewX, Y := NewY, Z := PropLocation.Z}
             Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 2.0)
 
     RotateTowardPlayer(Agent : agent)<suspends>:void=
-        Print("RotateTowardPlayer")
+        #Print("RotateTowardPlayer")
         loop:
             if (CurrentAgent = false):
                 break

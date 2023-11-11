@@ -13,7 +13,7 @@ question_device := class(creative_device):
     @editable TriggerLeft :trigger_device = trigger_device{}
     @editable TriggerRight :trigger_device = trigger_device{}
 
-    @editable Boss : enemy_device = enemy_device{}
+    @editable GameManager : game_manager = game_manager{}
 
     # Runs when the device is started in a running game
     OnBegin<override>()<suspends>:void=
@@ -26,7 +26,7 @@ question_device := class(creative_device):
         Print("OnTriggerdLeft")
         Q1Prop.SetMaterial(Assets.q1ng_Mat)
         Q2Prop.SetMaterial(Assets.q1ok_Mat)
-        Boss.OnAttacked()
+        GameManager.OnCorrectAnswer()
 
     OnTriggerdRight(MaybeAgent: ?agent) : void =
         Print("OnTriggerdRight")
