@@ -20,6 +20,7 @@ enemy_device := class(creative_device):
     var InitialPosition<private>: vector3 = vector3{X:=0.0, Y:= 0.0, Z:=0.0}
     var InitialRotation<private>: rotation = rotation{}
     var CurrentAgent<private>: ?agent = false
+    var IsEmerged<private> : logic = false
 
     MaxX :float = 3580.0
     MaxY :float = 5100.0
@@ -27,8 +28,12 @@ enemy_device := class(creative_device):
     # Runs when the device is started in a running game
     OnBegin<override>()<suspends>:void=
         Button1.InteractedWithEvent.Subscribe(OnButton)
+        PlayerSpawner.SpawnedEvent.Subscribe(OnPlayerSpawned)
+        EnemyZone.AgentEntersEvent.Subscribe(OnPlayerCaptured)
 
     OnPlayerSpawned(Agent: agent):void=
+        if (IsEmerged = false):
+            return
         Print("OnPlayerSpawned")
         spawn{StartChasing(Agent)}
     
@@ -37,6 +42,8 @@ enemy_device := class(creative_device):
         spawn{StartChasing(Agent)}
 
     OnPlayerCaptured(Agent : agent) :void =
+        if (IsEmerged = false):
+            return
         if (FortniteCharacter : fort_character = Agent.GetFortCharacter[]):
             MyCharacterHealth : float = FortniteCharacter.GetHealth()
             FortniteCharacter.Damage(MyCharacterHealth)
@@ -70,20 +77,20 @@ enemy_device := class(creative_device):
         Sleep(WaitTime)
 
     Emerge()<suspends>:void =
-        PlayerSpawner.SpawnedEvent.Subscribe(OnPlayerSpawned)
-        EnemyZone.AgentEntersEvent.Subscribe(OnPlayerCaptured)
         PropLocation := Enemy.GetTransform().Translation
-        NewLocation := vector3{X := PropLocation.X, Y := PropLocation.Y, Z := PropLocation.Z + 300.0}
+        NewLocation := vector3{X := PropLocation.X, Y := PropLocation.Y, Z := PropLocation.Z + 400.0}
         Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 1.5)
         set InitialPosition = Enemy.GetTransform().Translation
         set InitialRotation = Enemy.GetTransform().Rotation
+        set IsEmerged = true
 
     BackToGround()<suspends>:void =
         Print("BackToGround")
         set CurrentAgent = false
+        set IsEmerged = false
         PropLocation := Enemy.GetTransform().Translation
-        NewLocation := vector3{X := PropLocation.X, Y := PropLocation.Y, Z := PropLocation.Z - 300.0}
-        Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 3.0)
+        NewLocation := vector3{X := PropLocation.X, Y := PropLocation.Y, Z := PropLocation.Z - 400.0}
+        Enemy.MoveTo(NewLocation, Enemy.GetTransform().Rotation, 2.0)
 
     Attack(Agent: agent)<suspends>:void =
         #Print("Attack")

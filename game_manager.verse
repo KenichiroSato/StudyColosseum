@@ -38,6 +38,8 @@ game_manager := class(creative_device):
             set CurrentEnemy = option{Enemy}
             Enemy.Emerge()
             InitHealthBar(Enemy.HealthBarColor)
+            if (Player := CurrentPlayer?):
+                Enemy.StartChasing(Player)
         
 
     OnCorrectAnswer(): void =
